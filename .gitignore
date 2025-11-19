@@ -1,0 +1,41 @@
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Python cached bytecode
+__pycache__/
+*.pyc
+
+# Django/SQLite DB
+*.sqlite3
+db.sqlite3
+
+# Local environment/config
+.env
+.env.*
+*.local
+
+# Node/npm caches (if any front-end assets)
+node_modules/
+
+# Editor/OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Pip install artifacts
+pip-wheel-metadata/
+*.egg-info/
+
+# Coverage / test
+htmlcov/
+.coverage
+
+# Logs
+logs/
+*.log
+
+# Local helper scripts outputs
+install_local.sh~

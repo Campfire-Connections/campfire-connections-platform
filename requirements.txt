@@ -1,0 +1,10 @@
+Django==5.2.8
+djangorestframework
+django-tables2
+django-address
+django-annoying
+django-taggit
+Pillow
+pandas
+inflect
+django-dynamic-fixture

@@ -1,0 +1,10 @@
+-r requirements.txt
+-e ./core
+-e ./organization
+-e ./facility
+-e ./faction
+-e ./course
+-e ./enrollment
+-e ./reports
+-e ./pages
+-e ./user
