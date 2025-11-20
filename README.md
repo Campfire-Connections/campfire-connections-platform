@@ -37,6 +37,21 @@ python manage.py createsuperuser  # optional admin
 python manage.py runserver
 ```
 
+### Seed Sample Data
+
+Use the dedicated management command whenever you want a fully-linked demonstration dataset:
+
+```bash
+python manage.py seed_test_data
+```
+
+The command is idempotent, so re-running it refreshes the same objects without creating duplicates. It wires three organizations, two facilities (River Bend + Summit Ridge), departments, quarters, two factions, requirements/courses, organization + facility enrollments, weekly periods, facility classes, faction enrollments, and example faculty/leader/attendee enrollments. Sample accounts created with password `testpass123`:
+- `campfire.admin` – Admin portal access.
+- `donna.faculty` – River Bend faculty lead tied to Wilderness First Aid.
+- `mason.faculty` – Summit Ridge faculty mentor for the leadership cohort.
+- `leo.leader` / `sara.leader` – Faction leaders for Eagle Patrol + Aurora Crew.
+- `amy.attendee` / `riley.attendee` – Attendees mapped to navigation and leadership programs.
+
 ### Portal Routing
 
 `campfire_connections/urls.py` wires each domain app (pages, organization, facility, faction, course, enrollment, reports) and pulls in `main` plus Django's auth views. Landing page lives in `pages`, dashboards/routes in each app.
