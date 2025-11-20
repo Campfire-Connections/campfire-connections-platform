@@ -56,6 +56,10 @@ The command is idempotent, so re-running it refreshes the same objects without c
 
 `campfire_connections/urls.py` wires each domain app (pages, organization, facility, faction, course, enrollment, reports) and pulls in `main` plus Django's auth views. Landing page lives in `pages`, dashboards/routes in each app.
 
+### Dashboards & Widgets
+
+Portal dashboards share a modular widget system defined in `core/widgets.py`. Each dashboard view returns a collection of widget objects (tables, charts, action lists, etc.) that are rendered as responsive cards inside `pages/templates/base/dashboard.html`. To add a new card, instantiate the appropriate widget (e.g. `TableWidget`, `ChartWidget`, `TextWidget`) in the dashboard view’s `get_dashboard_widgets` method and pass it the data/queryset you want to surface.
+
 ### Organization
 
 - Models: `Organization`, `OrganizationLabels` in `organization/models/organization.py`.
