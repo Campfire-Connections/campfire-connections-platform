@@ -1,3 +1,9 @@
 from django.test import TestCase
+from django.urls import reverse
 
-# Create your tests here.
+
+class MainViewTests(TestCase):
+    def test_healthcheck_returns_ok(self):
+        response = self.client.get(reverse("healthcheck"))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"ok", response.content)
