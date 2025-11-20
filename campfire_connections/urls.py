@@ -18,6 +18,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from django.contrib.auth import views as auth_views
+from user.views import DashboardView as UserDashboardView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -33,6 +34,7 @@ urlpatterns = [
     ),
     path("accounts/", include("django.contrib.auth.urls")),
     path("accounts/", include("user.urls")),
+    path("dashboard/", UserDashboardView.as_view(), name="dashboard"),
     path("", include("pages.urls")),
     path("", include("organization.urls")),
     path("", include("facility.urls")),
