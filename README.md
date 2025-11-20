@@ -58,7 +58,7 @@ The command is idempotent, so re-running it refreshes the same objects without c
 
 ### Dashboards & Widgets
 
-Portal dashboards share a modular widget system defined in `core/widgets.py`. Each dashboard view returns a collection of widget objects (tables, charts, action lists, etc.) that are rendered as responsive cards inside `pages/templates/base/dashboard.html`. To add a new card, instantiate the appropriate widget (e.g. `TableWidget`, `ChartWidget`, `TextWidget`) in the dashboard view’s `get_dashboard_widgets` method and pass it the data/queryset you want to surface.
+Portal dashboards share a modular widget system defined in `core/widgets.py` and centralized in `core/dashboard_registry.py`. Each portal key lists default widgets that the matching dashboard view automatically renders as responsive cards inside `pages/templates/base/dashboard.html`. Views only need to implement small provider methods (e.g. `get_leader_metrics_widget`) that return the payload required by each widget class. Per-user preferences (hidden widgets/layout JSON) are stored in `core.models.dashboard.DashboardLayout`, so we can hide/show cards per portal as soon as a UI is wired up. Shared data helpers in `core/dashboard_data.py` keep widget feeds cached and reusable.
 
 ### Organization
 
