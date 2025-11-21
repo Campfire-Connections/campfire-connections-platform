@@ -24,6 +24,8 @@ Key domain relationships:
 - Added database constraints to ensure slugs are unique per organization and that `(faction, user)` / `(facility, user)` combinations are unique.
 - Created a portal registry (`core/portals.py`) describing each portal’s dashboard template, widgets, and allowed user types; dashboards now pick up templates/permissions based on `portal_key`.
 - Refactored tables (leaders, attendees, faculty) to work directly with profile models instead of raw users.
+- Implemented a nav menu registry + favorite quick links (`core/menu_registry.py`, `core/context_processors.dynamic_menu`, `pages/templates/partials/nav.html`) so users can pin shortcuts directly from the navbar.
+- Introduced an availability + scheduling service (`enrollment/models/availability.py`, `enrollment/services/scheduling.py`) that keeps faction cabins, faculty quarters, and class rosters in sync no matter which portal edits them.
 
 ## Development
 
