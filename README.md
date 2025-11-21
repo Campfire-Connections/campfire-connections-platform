@@ -60,6 +60,10 @@ The command is idempotent, so re-running it refreshes the same objects without c
 
 Portal dashboards share a modular widget system defined in `core/widgets.py` and centralized in `core/dashboard_registry.py`. Each portal key lists default widgets that the matching dashboard view automatically renders as responsive cards inside `pages/templates/base/dashboard.html`. Views only need to implement small provider methods (e.g. `get_leader_metrics_widget`) that return the payload required by each widget class. Per-user preferences (hidden widgets/layout JSON) are stored in `core.models.dashboard.DashboardLayout`, so we can hide/show cards per portal as soon as a UI is wired up. Shared data helpers in `core/dashboard_data.py` keep widget feeds cached and reusable.
 
+### Navigation Menu
+
+`core/menu_registry.py` describes the navigation links each user type should see (leaders, attendees, faculty, etc.). The `dynamic_menu` context processor resolves the registry into template-friendly entries, handling permissions and dynamic URL kwargs (e.g., faction slugs). The navbar template simply loops over `menu_items`, so updating navigation is as simple as editing the registry.
+
 ### Organization
 
 - Models: `Organization`, `OrganizationLabels` in `organization/models/organization.py`.
