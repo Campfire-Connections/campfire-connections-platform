@@ -62,7 +62,7 @@ Portal dashboards share a modular widget system defined in `core/widgets.py` and
 
 ### Navigation Menu
 
-`core/menu_registry.py` describes the navigation links each user type should see (leaders, attendees, faculty, etc.). The `dynamic_menu` context processor resolves the registry into template-friendly entries, handling permissions and dynamic URL kwargs (e.g., faction slugs). The navbar template simply loops over `menu_items`, so updating navigation is as simple as editing the registry.
+`core/menu_registry.py` describes the navigation links each user type should see (leaders, attendees, faculty, etc.). The `dynamic_menu` context processor resolves the registry into template-friendly entries, handling permissions and dynamic URL kwargs (e.g., faction slugs). The navbar template simply loops over `menu_items` and `quick_menu_items`, so updating navigation (or adding new quick-access links) is as simple as editing the registry.
 
 ### Organization
 
