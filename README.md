@@ -9,6 +9,7 @@ A modular, multi-portal Django platform for managing organizations, facilities, 
 - Root-level directories (`core`, `organization`, `facility`, `faction`, `course`, `enrollment`, `reports`, `pages`, `user`) hold each domain app that is pip-installed in editable mode.
 
 Key domain relationships:
+
 - **Organization** → hierarchical parent/child structure (can contain facilities and factions).
 - **Facility** → belongs to an organization; manages departments, quarters, faculty.
 - **Faction** → belongs to an organization; manages leaders and attendees.
@@ -46,6 +47,7 @@ python manage.py seed_test_data
 ```
 
 The command is idempotent, so re-running it refreshes the same objects without creating duplicates. It wires three organizations, two facilities (River Bend + Summit Ridge), departments, quarters, two factions, requirements/courses, organization + facility enrollments, weekly periods, facility classes, faction enrollments, and example faculty/leader/attendee enrollments. Sample accounts created with password `testpass123`:
+
 - `campfire.admin` – Admin portal access.
 - `donna.faculty` – River Bend faculty lead tied to Wilderness First Aid.
 - `mason.faculty` – Summit Ridge faculty mentor for the leadership cohort.
@@ -110,9 +112,11 @@ Portal dashboards share a modular widget system defined in `core/widgets.py` and
 ### Running Tests / Lint
 
 No dedicated test suite is included here, but you can run Django checks:
+
 ```bash
 python manage.py check
 ```
+
 Add new tests under each app’s `tests.py` as you extend functionality.
 
 ### Git Submodules vs Local Repos
