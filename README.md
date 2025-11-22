@@ -1,132 +1,58 @@
-# Campfire Connections Platform
+# Campfire Connections
 
-A modular, multi-portal Django platform for managing organizations, facilities, factions, courses, enrollments, reports, and user portals (faculty, leader, attendee). This project stitches together the Campfire-Connections repos into a single cohesive Django site.
+A unified platform for councils, camps, and training centers to run seasons, sessions, and people on a single screen. Campfire Connections blends scheduling, housing, classes, and communication across every role—admins, facilities, factions, faculty, leaders, and attendees.
 
-## Architecture Overview
+## What you can do
 
-- `campfire_connections/` – main Django project (settings, URLs).
-- `main/` – simple landing/dashboard app.
-- Root-level directories (`core`, `organization`, `facility`, `faction`, `course`, `enrollment`, `reports`, `pages`, `user`) hold each domain app that is pip-installed in editable mode.
+- **Plan seasons without spreadsheets**: Stand up organizations, facilities, sessions, weeks, and periods; track capacities for cabins, tents, and classes.
+- **Keep everyone in the right place**: Match factions to weeks/quarters, then slot attendees, leaders, and faculty with automatic availability and overbooking protection.
+- **Give each role its own portal**: Leaders see faction rosters, faculty see assignments, attendees see personal schedules. Navigation is dynamic and pin-able for quick access.
+- **See the day at a glance**: Dashboard widgets surface rosters, schedules, metrics, and resources per portal; layouts and favorites are saved per user.
+- **Report with confidence**: Build and download snapshots; permissions ensure the right people see the right data.
 
-Key domain relationships:
+## Who it's for
 
-- **Organization** → hierarchical parent/child structure (can contain facilities and factions).
-- **Facility** → belongs to an organization; manages departments, quarters, faculty.
-- **Faction** → belongs to an organization; manages leaders and attendees.
-- **User / Profiles** → a single custom `User` model with role-specific OneToOne profiles (`FacultyProfile`, `LeaderProfile`, `AttendeeProfile`).
-- **Enrollment** → orchestrates facility/faction/course scheduling via dedicated models and tables.
+- Councils and districts coordinating multi-week programming.
+- Facility teams juggling cabins/quarters and rotating instructors.
+- Faction/crew leaders tracking their people and classes.
+- Training teams running repeatable courses with rosters and requirements.
 
-## Recent Enhancements
+## Highlights
 
-- Added `HierarchicalEntity` and `AddressableMixin` in `core/mixins/models.py` so Organization, Facility, and Faction share the same set of mixins (name/slug/parent/address/audit).
-- Flattened leader, attendee, and faculty models to operate purely through their profiles; removed old multi-table inheritance and standardized profile forms/tables/serializers around the shared `ProfileUserFieldsMixin`.
-- Introduced scoped mixins (`OrgScopedMixin`, `FacilityScopedMixin`, `FactionScopedMixin`, `PortalPermissionMixin`) to automatically filter views by the active portal and enforce role-based access.
-- Added database constraints to ensure slugs are unique per organization and that `(faction, user)` / `(facility, user)` combinations are unique.
-- Created a portal registry (`core/portals.py`) describing each portal’s dashboard template, widgets, and allowed user types; dashboards now pick up templates/permissions based on `portal_key`.
-- Refactored tables (leaders, attendees, faculty) to work directly with profile models instead of raw users.
-- Implemented a nav menu registry + favorite quick links (`core/menu_registry.py`, `core/context_processors.dynamic_menu`, `pages/templates/partials/nav.html`) so users can pin shortcuts directly from the navbar.
-- Introduced an availability + scheduling service (`enrollment/models/availability.py`, `enrollment/services/scheduling.py`) that keeps faction cabins, faculty quarters, and class rosters in sync no matter which portal edits them.
+- **Scheduling Service**: One source of truth that enforces capacity across quarters and class rosters, no matter which form or API updates the data.
+- **Dynamic Navigation**: Registry-driven menu with quick favorites you can pin/unpin right from the navbar.
+- **Role-Based Dashboards**: Widget registry per portal; users can hide/show/reorder cards and keep preferences.
+- **Safe Defaults**: Profile creation, slugging, and label setup are automated; activation emails are sent asynchronously.
 
-## Development
-
-### Setup
+## Quick start (demo friendly)
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-./install_local.sh  # installs core/facility/etc via editable installs (no network needed)
+./install_local.sh          # editable installs, no network needed
 python manage.py migrate
-python manage.py createsuperuser  # optional admin
+python manage.py seed_test_data
 python manage.py runserver
 ```
 
-### Seed Sample Data
+Demo accounts (password `testpass123`):
+- `campfire.admin` (admin)
+- `donna.faculty`, `mason.faculty` (faculty)
+- `leo.leader`, `sara.leader` (leaders)
+- `amy.attendee`, `riley.attendee` (attendees)
 
-Use the dedicated management command whenever you want a fully-linked demonstration dataset:
+## Apps in the suite
 
-```bash
-python manage.py seed_test_data
-```
+- **Core**: shared mixins, dashboards, navigation, portal registry.
+- **Organization**: councils/districts and labels.
+- **Facility**: facilities, departments, quarters, faculty profiles.
+- **Faction**: factions, leaders, attendees.
+- **Course & Enrollment**: courses, facility classes, seasons/sessions, availability-aware enrollments.
+- **Reports**: templates and generated output.
+- **Pages/Main/User**: landing pages, auth, dynamic nav favorites, activation flows.
 
-The command is idempotent, so re-running it refreshes the same objects without creating duplicates. It wires three organizations, two facilities (River Bend + Summit Ridge), departments, quarters, two factions, requirements/courses, organization + facility enrollments, weekly periods, facility classes, faction enrollments, and example faculty/leader/attendee enrollments. Sample accounts created with password `testpass123`:
+## Deploy notes
 
-- `campfire.admin` – Admin portal access.
-- `donna.faculty` – River Bend faculty lead tied to Wilderness First Aid.
-- `mason.faculty` – Summit Ridge faculty mentor for the leadership cohort.
-- `leo.leader` / `sara.leader` – Faction leaders for Eagle Patrol + Aurora Crew.
-- `amy.attendee` / `riley.attendee` – Attendees mapped to navigation and leadership programs.
-
-### Portal Routing
-
-`campfire_connections/urls.py` wires each domain app (pages, organization, facility, faction, course, enrollment, reports) and pulls in `main` plus Django's auth views. Landing page lives in `pages`, dashboards/routes in each app.
-
-### Dashboards & Widgets
-
-Portal dashboards share a modular widget system defined in `core/widgets.py` and centralized in `core/dashboard_registry.py`. Each portal key lists default widgets that the matching dashboard view automatically renders as responsive cards inside `pages/templates/base/dashboard.html`. Views only need to implement small provider methods (e.g. `get_leader_metrics_widget`) that return the payload required by each widget class. Per-user preferences (hidden widgets/layout JSON) are stored in `core.models.dashboard.DashboardLayout`, so we can hide/show cards per portal as soon as a UI is wired up. Shared data helpers in `core/dashboard_data.py` keep widget feeds cached and reusable.
-
-### Navigation Menu
-
-`core/menu_registry.py` describes the navigation links each user type should see (leaders, attendees, faculty, etc.). The `dynamic_menu` context processor resolves the registry into template-friendly entries, handling permissions and dynamic URL kwargs (e.g., faction slugs). The navbar template simply loops over `menu_items` and `quick_menu_items`, so updating navigation (or adding new quick-access links) is as simple as editing the registry.
-
-### Organization
-
-- Models: `Organization`, `OrganizationLabels` in `organization/models/organization.py`.
-- URLs: `organization/urls.py` handles CRUD views and DRF router.
-- Views use the scoped mixins to ensure organization context is respected.
-
-### Facility
-
-- Models: `Facility`, `Department`, `Quarters`, `FacultyProfile` (`facility/models`).
-- Views: `facility/views/facility.py` uses `FacilityScopedMixin` and `PortalPermissionMixin`.
-- Forms/Tables: `FacultyForm`, `FacultyTable` operate on `FacultyProfile`.
-- URLs under `/facilities/` include nested routes for departments, quarters, faculty, classes, enrollments, courses.
-
-### Faction
-
-- Models: `Faction`, `LeaderProfile`, `AttendeeProfile` (`faction/models`).
-- Views and tables use profile models and scoped mixins (`FactionScopedMixin`).
-- Leader/Attendee forms share `ProfileUserFieldsMixin`; tables and DRF serializers operate on profiles.
-
-### Courses & Enrollment
-
-- `course/` – course catalog, facility classes, requirements.
-- `enrollment/` – facility, faction, faculty, leader, attendee enrollments with extensive tables/forms/views.
-
-### Reports & Pages
-
-- `reports/` – user-defined report templates and generated reports.
-- `pages/` – static/landing pages, widgets, dashboards, dynamic forms.
-
-### Core Utilities
-
-- `core/mixins/models.py` – base mixins for audit, slug, address, hierarchy, track changes.
-- `core/mixins/views.py` – portal scoping, Ajax handling, permission mixins.
-- `core/views/base.py` – base class for list/detail/create/update/manage/dashboard views.
-- `core/portals.py` – registry of portal metadata (labels, templates, widgets, permissions).
-
-### User App
-
-- Custom `User` model in `user/models.py` with `UserType` choices and profile creation signals.
-- Forms (`user/forms.py`) include `ProfileUserFieldsMixin` for shared user fields and registration form.
-- Serializers (`user/serializers.py`) provide `UserSummarySerializer` and `BaseProfileSerializer` for nested JSON structures.
-- Views include login/register/dashboard endpoints using the shared mixins.
-
-### Running Tests / Lint
-
-No dedicated test suite is included here, but you can run Django checks:
-
-```bash
-python manage.py check
-```
-
-Add new tests under each app’s `tests.py` as you extend functionality.
-
-### Git Submodules vs Local Repos
-
-Each Campfire-Connections module is a sibling directory at the repo root. Editable installs (`pip install -e ./core`, etc.) keep imports consistent while letting you work inside each module directly.
-
-## Future Work
-
-- Expand automated tests for scoped mixins, dashboards, and profile constraints.
-- Flesh out the portal registry with widget classes and dynamic dashboards.
-- Add developer docs for writing new portal widgets and wiring new modules.
+- Settings live in `campfire_connections/settings.py`; switch databases or email backend as needed.
+- Activation links use `SITE_BASE_URL`/`ALLOWED_HOSTS`; mail is fire-and-forget, suitable for background workers later.
+- Everything is Django 5.2.x; tests run with `python manage.py test` (77 passing).
