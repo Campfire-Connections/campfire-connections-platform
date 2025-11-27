@@ -53,6 +53,17 @@ Demo accounts (password `testpass123`):
 
 ## Deploy notes
 
-- Settings live in `campfire_connections/settings.py`; switch databases or email backend as needed.
+- Settings are modular (`campfire_connections/settings/base.py` with `local.py` defaulted in manage.py and `prod.py` for WSGI/ASGI); override via `DJANGO_SETTINGS_MODULE` as needed.
 - Activation links use `SITE_BASE_URL`/`ALLOWED_HOSTS`; mail is fire-and-forget, suitable for background workers later.
 - Everything is Django 5.2.x; tests run with `python manage.py test` (77 passing).
+
+## Configuration & static/media
+
+- Copy `.env.example` to `.env` and export it (`set -a; source .env; set +a`) or set env vars in your process manager. Use strong values for `DJANGO_SECRET_KEY`, disable `DJANGO_DEBUG`, and set `DJANGO_ALLOWED_HOSTS` for production.
+- Static assets are served from `pages/static` in development; run `python manage.py collectstatic` for deploys (outputs to `staticfiles`). Point your web server or CDN there.
+- User uploads live under `media/`; ensure your web server or storage backend serves `MEDIA_URL` safely.
+- Security flags (`DJANGO_SESSION_COOKIE_SECURE`, `DJANGO_CSRF_COOKIE_SECURE`, `DJANGO_SECURE_*`) default off locally—enable them in production.
+
+## Tooling
+
+- Formatting/linting config lives in `pyproject.toml` (black, isort, ruff, mypy). Run your preferred linters locally to keep style consistent.
