@@ -6,21 +6,36 @@ Environment-specific overrides live in local.py / prod.py.
 
 from pathlib import Path
 import os
+from django.core.exceptions import ImproperlyConfigured
 
 os.environ.setdefault("SQLITE_TMPDIR", "/tmp")
 
 # project root (one level above the campfire_connections package)
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+def _env_flag(name, default=False):
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.lower() in {"1", "true", "yes"}
+
+
 # Core config
-SECRET_KEY = os.environ.get(
-    "DJANGO_SECRET_KEY",
-    "django-insecure-wl)9ok1=pgk^yt5(2er0#nf@m40aoa^+fjer#2m)3w!$b194#=",
-)
-DEBUG = os.environ.get("DJANGO_DEBUG", "").lower() in {"1", "true", "yes"}
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(
-    ","
-)
+_using_local_settings = os.environ.get("DJANGO_SETTINGS_MODULE", "").endswith(".local")
+DEBUG = _env_flag("DJANGO_DEBUG", default=_using_local_settings)
+
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = "django-insecure-wl)9ok1=pgk^yt5(2er0#nf@m40aoa^+fjer#2m)3w!$b194#="
+    else:
+        raise ImproperlyConfigured("DJANGO_SECRET_KEY must be set in production.")
+
+ALLOWED_HOSTS = [
+    host for host in os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",") if host
+] or (["localhost", "127.0.0.1"] if DEBUG else [])
+if not ALLOWED_HOSTS and not DEBUG:
+    raise ImproperlyConfigured("DJANGO_ALLOWED_HOSTS must be set in production.")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -72,13 +87,14 @@ TEMPLATES = [
                 "core.context_processors.top_links_menu",
                 "core.context_processors.user_profile",
                 "core.context_processors.user_type",
-                "core.context_processors.active_enrollment",
-                "core.context_processors.color_scheme_processor",
-                "core.context_processors.user_info_row",
-                "core.context_processors.my_enrollments",
-            ],
-        },
+            "core.context_processors.active_enrollment",
+            "core.context_processors.color_scheme_processor",
+            "core.context_processors.user_info_row",
+            "core.context_processors.my_enrollments",
+            "core.context_processors.theme_mode",
+        ],
     },
+},
 ]
 
 WSGI_APPLICATION = "campfire_connections.wsgi.application"
@@ -114,14 +130,15 @@ AUTH_USER_MODEL = "user.User"
 
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 
+rest_auth_classes = ["rest_framework.authentication.SessionAuthentication"]
+if DEBUG:
+    rest_auth_classes.append("rest_framework.authentication.BasicAuthentication")
+
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication",
-        "rest_framework.authentication.BasicAuthentication",
-    ],
+    "DEFAULT_AUTHENTICATION_CLASSES": rest_auth_classes,
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": int(os.environ.get("DJANGO_API_PAGE_SIZE", "50")),
     "DEFAULT_THROTTLE_CLASSES": [
@@ -134,36 +151,21 @@ REST_FRAMEWORK = {
     },
 }
 
-SESSION_COOKIE_SECURE = os.environ.get("DJANGO_SESSION_COOKIE_SECURE", "").lower() in {
-    "1",
-    "true",
-    "yes",
-}
-CSRF_COOKIE_SECURE = os.environ.get("DJANGO_CSRF_COOKIE_SECURE", "").lower() in {
-    "1",
-    "true",
-    "yes",
-}
+SESSION_COOKIE_SECURE = _env_flag("DJANGO_SESSION_COOKIE_SECURE", default=not DEBUG)
+CSRF_COOKIE_SECURE = _env_flag("DJANGO_CSRF_COOKIE_SECURE", default=not DEBUG)
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"
 X_FRAME_OPTIONS = "DENY"
 
-SECURE_HSTS_SECONDS = int(os.environ.get("DJANGO_SECURE_HSTS_SECONDS", "0"))
-SECURE_HSTS_INCLUDE_SUBDOMAINS = (
-    os.environ.get("DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS", "").lower()
-    in {"1", "true", "yes"}
+SECURE_HSTS_SECONDS = int(
+    os.environ.get("DJANGO_SECURE_HSTS_SECONDS", "31536000" if not DEBUG else "0")
 )
-SECURE_HSTS_PRELOAD = os.environ.get("DJANGO_SECURE_HSTS_PRELOAD", "").lower() in {
-    "1",
-    "true",
-    "yes",
-}
-SECURE_SSL_REDIRECT = os.environ.get("DJANGO_SECURE_SSL_REDIRECT", "").lower() in {
-    "1",
-    "true",
-    "yes",
-}
+SECURE_HSTS_INCLUDE_SUBDOMAINS = _env_flag(
+    "DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS", default=not DEBUG
+)
+SECURE_HSTS_PRELOAD = _env_flag("DJANGO_SECURE_HSTS_PRELOAD", default=not DEBUG)
+SECURE_SSL_REDIRECT = _env_flag("DJANGO_SECURE_SSL_REDIRECT", default=not DEBUG)
 
 LOGGING = {
     "version": 1,
