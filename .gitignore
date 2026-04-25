@@ -10,11 +10,13 @@ __pycache__/
 # Django/SQLite DB
 *.sqlite3
 db.sqlite3
+staticfiles/
 
 # Local environment/config
 .env
 .env.*
 *.local
+.codex
 
 # Node/npm caches (if any front-end assets)
 node_modules/
@@ -39,3 +41,14 @@ logs/
 
 # Local helper scripts outputs
 install_local.sh~
+
+# Local app repos are versioned independently.
+core/
+course/
+enrollment/
+facility/
+faction/
+organization/
+pages/
+reports/
+user/
