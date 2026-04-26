@@ -84,6 +84,15 @@ Sign in at `/login/`. The admin portal is available at `/accounts/admin-portal/`
 - Formatting/linting config lives in `pyproject.toml` (black, isort, ruff, mypy).
 - `make test` runs the Django suite through `.venv/bin/python`.
 - `docker compose exec web python manage.py check` validates the running container.
+- `./scripts/repo-status.sh` prints branch/dirty status for the root repo and each app repo.
+
+## Repository layout
+
+This workspace currently keeps the Django project root and the app folders as separate git
+repositories so app-level improvement passes can be tracked independently. That is workable for
+local iteration, but cross-app changes must be committed in each touched repo. If the app folders
+are not published/versioned independently, the cleaner long-term target is a single monorepo with
+one CI pipeline and one atomic application history.
 
 ## Frontend conventions
 
