@@ -1,4 +1,4 @@
-VENV=venv
+VENV=.venv
 PY=$(VENV)/bin/python
 PIP=$(VENV)/bin/pip
 

@@ -26,6 +26,19 @@ A unified platform for councils, camps, and training centers to run seasons, ses
 
 ## Quick start (demo friendly)
 
+### Docker
+
+```bash
+docker compose build
+docker compose run --rm web python manage.py migrate
+docker compose run --rm web python manage.py seed_test_data
+docker compose up
+```
+
+Open `http://localhost:8000/`.
+
+### Local Python
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
@@ -41,6 +54,8 @@ Demo accounts (password `testpass123`):
 - `leo.leader`, `sara.leader` (leaders)
 - `amy.attendee`, `riley.attendee` (attendees)
 
+Sign in at `/login/`. The admin portal is available at `/accounts/admin-portal/`.
+
 ## Apps in the suite
 
 - **Core**: shared mixins, dashboards, navigation, portal registry.
@@ -55,7 +70,7 @@ Demo accounts (password `testpass123`):
 
 - Settings are modular (`campfire_connections/settings/base.py` with `local.py` defaulted in manage.py and `prod.py` for WSGI/ASGI); override via `DJANGO_SETTINGS_MODULE` as needed.
 - Activation links use `SITE_BASE_URL`/`ALLOWED_HOSTS`; mail is fire-and-forget, suitable for background workers later.
-- Everything is Django 5.2.x; tests run with `python manage.py test` (77 passing).
+- Everything is Django 5.2.x; tests run with `python manage.py test`.
 
 ## Configuration & static/media
 
@@ -66,4 +81,13 @@ Demo accounts (password `testpass123`):
 
 ## Tooling
 
-- Formatting/linting config lives in `pyproject.toml` (black, isort, ruff, mypy). Run your preferred linters locally to keep style consistent.
+- Formatting/linting config lives in `pyproject.toml` (black, isort, ruff, mypy).
+- `make test` runs the Django suite through `.venv/bin/python`.
+- `docker compose exec web python manage.py check` validates the running container.
+
+## Frontend conventions
+
+- App pages should extend the shared templates in `pages/templates/base/`.
+- List pages should use `base/list.html`; form pages should use `base/form.html`; detail pages should use `base/show.html` unless a page has a specific dashboard layout.
+- Use theme tokens from `pages/static/css/layout.css` (`--card`, `--panel`, `--text`, `--muted`, `--border`, `--accent`) instead of hardcoded light colors.
+- Prefer `content-card`, Bootstrap buttons, and the `page_actions` block for top-level actions so dark mode and mobile layouts stay consistent.
