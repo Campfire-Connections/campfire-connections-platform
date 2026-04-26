@@ -1,12 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Campfire Connections</title>
-</head>
-<body>
-    <h1>Campfire Connections</h1>
-    <p>If you see this page, the Django project is set up correctly.</p>
-</body>
-</html>
+{% extends "base/layout.html" %}
+
+{% block title_text %}Campfire Connections{% endblock title_text %}
+
+{% block content %}
+<section class="content-card">
+    <h2>Operations Dashboard</h2>
+    <p class="text-muted mb-0">
+        The Django project is running. Use the navigation rail to manage organizations,
+        facilities, factions, courses, enrollments, and reports.
+    </p>
+</section>
+{% endblock content %}

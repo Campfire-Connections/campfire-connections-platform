@@ -87,14 +87,14 @@ TEMPLATES = [
                 "core.context_processors.top_links_menu",
                 "core.context_processors.user_profile",
                 "core.context_processors.user_type",
-            "core.context_processors.active_enrollment",
-            "core.context_processors.color_scheme_processor",
-            "core.context_processors.user_info_row",
-            "core.context_processors.my_enrollments",
-            "core.context_processors.theme_mode",
-        ],
+                "core.context_processors.active_enrollment",
+                "core.context_processors.color_scheme_processor",
+                "core.context_processors.user_info_row",
+                "core.context_processors.my_enrollments",
+                "core.context_processors.theme_mode",
+            ],
+        },
     },
-},
 ]
 
 WSGI_APPLICATION = "campfire_connections.wsgi.application"
