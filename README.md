@@ -95,6 +95,7 @@ Sign in at `/login/`. The admin portal is available at `/accounts/admin-portal/`
 - `docker compose exec web python manage.py check` validates the running container.
 - `./scripts/repo-status.sh` prints branch/dirty status for the root repo and each app repo.
 - `./scripts/repo-each.sh <git args>` runs a git command across the root repo and each app repo.
+- `./scripts/audit-templates.py` verifies app templates inherit approved shared shells.
 
 ## Repository layout
 
