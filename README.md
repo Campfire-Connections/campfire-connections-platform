@@ -85,6 +85,7 @@ Sign in at `/login/`. The admin portal is available at `/accounts/admin-portal/`
 - `make test` runs the Django suite through `.venv/bin/python`.
 - `docker compose exec web python manage.py check` validates the running container.
 - `./scripts/repo-status.sh` prints branch/dirty status for the root repo and each app repo.
+- `./scripts/repo-each.sh <git args>` runs a git command across the root repo and each app repo.
 
 ## Repository layout
 
@@ -93,6 +94,10 @@ repositories so app-level improvement passes can be tracked independently. That 
 local iteration, but cross-app changes must be committed in each touched repo. If the app folders
 are not published/versioned independently, the cleaner long-term target is a single monorepo with
 one CI pipeline and one atomic application history.
+
+Current decision: keep the app subrepos while this codebase is actively being refactored, but use
+the helper scripts above for status/review hygiene. Revisit consolidation after URL namespaces,
+service boundaries, and frontend shell enforcement are stable.
 
 ## Frontend conventions
 
