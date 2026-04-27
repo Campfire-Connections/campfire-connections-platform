@@ -9,5 +9,27 @@ services:
       DJANGO_SETTINGS_MODULE: campfire_connections.settings.local
       DJANGO_DEBUG: "true"
       DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,0.0.0.0,web
+      DJANGO_DATABASE_ENGINE: ${DJANGO_DATABASE_ENGINE:-sqlite}
+      POSTGRES_DB: ${POSTGRES_DB:-campfireconnections}
+      POSTGRES_USER: ${POSTGRES_USER:-campfire}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-campfire}
+      POSTGRES_HOST: ${POSTGRES_HOST:-db}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
     volumes:
       - .:/app
+
+  db:
+    image: postgres:17
+    profiles:
+      - postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-campfireconnections}
+      POSTGRES_USER: ${POSTGRES_USER:-campfire}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-campfire}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

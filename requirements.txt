@@ -9,3 +9,4 @@ Pillow
 pandas
 inflect
 django-dynamic-fixture
+psycopg[binary]

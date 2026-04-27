@@ -100,12 +100,26 @@ TEMPLATES = [
 WSGI_APPLICATION = "campfire_connections.wsgi.application"
 ASGI_APPLICATION = "campfire_connections.asgi.application"
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+DATABASE_ENGINE = os.environ.get("DJANGO_DATABASE_ENGINE", "sqlite").lower()
+
+if DATABASE_ENGINE in {"postgres", "postgresql"}:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ.get("POSTGRES_DB", "campfireconnections"),
+            "USER": os.environ.get("POSTGRES_USER", "campfire"),
+            "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "campfire"),
+            "HOST": os.environ.get("POSTGRES_HOST", "db"),
+            "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / os.environ.get("SQLITE_DATABASE_NAME", "db.sqlite3"),
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

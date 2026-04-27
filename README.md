@@ -37,6 +37,15 @@ docker compose up
 
 Open `http://localhost:8000/`.
 
+To run against Postgres instead of SQLite:
+
+```bash
+DJANGO_DATABASE_ENGINE=postgres docker compose --profile postgres up -d db
+DJANGO_DATABASE_ENGINE=postgres docker compose run --rm web python manage.py migrate
+DJANGO_DATABASE_ENGINE=postgres docker compose run --rm web python manage.py seed_test_data
+DJANGO_DATABASE_ENGINE=postgres docker compose up
+```
+
 ### Local Python
 
 ```bash
