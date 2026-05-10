@@ -33,3 +33,5 @@ class MainViewTests(TestCase):
         request.session = {}
         response = views.home(request)
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Quick access")
+        self.assertContains(response, "Camp coordination, ready for today.")

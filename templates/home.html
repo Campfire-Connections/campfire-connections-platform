@@ -3,11 +3,47 @@
 {% block title_text %}Campfire Connections{% endblock title_text %}
 
 {% block content %}
-<section class="content-card">
-    <h2>Operations Dashboard</h2>
-    <p class="text-muted mb-0">
-        The Django project is running. Use the navigation rail to manage organizations,
-        facilities, factions, courses, enrollments, and reports.
-    </p>
+<section class="dashboard-hero">
+    <div>
+        <p class="eyebrow">Operations Dashboard</p>
+        <h2>Camp coordination, ready for today.</h2>
+        <p class="text-muted mb-0">
+            Use the navigation rail to manage organizations, facilities, factions, courses,
+            enrollments, and reports from one working surface.
+        </p>
+    </div>
+    <div class="dashboard-hero-actions" aria-label="Primary dashboard actions">
+        <a class="btn btn-primary" href="{% url 'organization_index' %}">
+            <span class="fas fa-sitemap" aria-hidden="true"></span>
+            Organizations
+        </a>
+        <a class="btn btn-outline-secondary" href="{% url 'reports:list_user_reports' %}">
+            <span class="fas fa-chart-bar" aria-hidden="true"></span>
+            Reports
+        </a>
+    </div>
+</section>
+
+<section class="dashboard-quick-grid" aria-label="Quick access">
+    <a class="quick-card" href="{% url 'facilities:index' %}">
+        <span class="quick-card-icon fas fa-campground" aria-hidden="true"></span>
+        <span class="quick-card-title">Facilities</span>
+        <span class="quick-card-meta">Quarters, faculty, and departments</span>
+    </a>
+    <a class="quick-card" href="{% url 'factions:index' %}">
+        <span class="quick-card-icon fas fa-users" aria-hidden="true"></span>
+        <span class="quick-card-title">Factions</span>
+        <span class="quick-card-meta">Leaders, attendees, and rosters</span>
+    </a>
+    <a class="quick-card" href="{% url 'courses:index' %}">
+        <span class="quick-card-icon fas fa-book-reader" aria-hidden="true"></span>
+        <span class="quick-card-title">Courses</span>
+        <span class="quick-card-meta">Classes, requirements, and sessions</span>
+    </a>
+    <a class="quick-card" href="{% url 'enrollments:week:index' %}">
+        <span class="quick-card-icon fas fa-calendar-week" aria-hidden="true"></span>
+        <span class="quick-card-title">Weeks</span>
+        <span class="quick-card-meta">Periods and active enrollment windows</span>
+    </a>
 </section>
 {% endblock content %}
