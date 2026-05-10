@@ -35,6 +35,9 @@ pip-wheel-metadata/
 # Coverage / test
 htmlcov/
 .coverage
+playwright-report/
+test-results/
+tests/browser/.auth/
 
 # Logs
 logs/
