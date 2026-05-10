@@ -17,11 +17,13 @@ from django.contrib.auth import get_user_model
 
 from enrollment.models.facility import FacilityEnrollment
 from enrollment.models.faction import FactionEnrollment
+from enrollment.models.attendee import AttendeeEnrollment
 from enrollment.models.organization import OrganizationEnrollment
 from enrollment.models.temporal import Period, Week
 from facility.models.facility import Facility
 from facility.models.quarters import Quarters, QuartersType
 from faction.models.faction import Faction
+from faction.models.attendee import AttendeeProfile
 from organization.models import Organization
 
 
@@ -42,6 +44,33 @@ def get_or_create_user():
         "user_type": User.UserType.ADMIN,
         "is_staff": True,
         "is_superuser": True,
+    }.items():
+        if getattr(user, attr) != value:
+            setattr(user, attr, value)
+            changed = True
+    if created or changed or not user.check_password("pass12345"):
+        user.set_password("pass12345")
+        user.save()
+    return user
+
+
+def get_or_create_attendee_user():
+    User = get_user_model()
+    user, created = User.objects.get_or_create(
+        username="qa.riley",
+        defaults={
+            "email": "qa.riley@example.com",
+            "first_name": "QA Riley",
+            "last_name": "Chen",
+            "user_type": User.UserType.ATTENDEE,
+        },
+    )
+    changed = False
+    for attr, value in {
+        "email": "qa.riley@example.com",
+        "first_name": "QA Riley",
+        "last_name": "Chen",
+        "user_type": User.UserType.ATTENDEE,
     }.items():
         if getattr(user, attr) != value:
             setattr(user, attr, value)
@@ -128,7 +157,7 @@ def main():
         {"name": "QA Cabin 1", "facility": facility, "type": quarters_type},
         {"capacity": 12},
     )
-    find_or_create(
+    faction_enrollment = find_or_create(
         FactionEnrollment,
         {
             "name": "QA Eagle Patrol Enrollment",
@@ -141,6 +170,39 @@ def main():
             "start": week.start,
             "end": week.start + timedelta(days=6),
             "description": "Browser QA enrollment fixture.",
+        },
+    )
+    attendee_user = get_or_create_attendee_user()
+    attendee = AttendeeProfile.objects.filter(user=attendee_user).first()
+    if not attendee:
+        attendee = AttendeeProfile.objects.create(
+            user=attendee_user,
+            organization=organization,
+            faction=faction,
+        )
+    else:
+        changed = False
+        for attr, value in {"organization": organization, "faction": faction}.items():
+            if getattr(attendee, attr) != value:
+                setattr(attendee, attr, value)
+                changed = True
+        if attendee.slug != "qa-riley-chen":
+            attendee.slug = "qa-riley-chen"
+            changed = True
+        if changed:
+            attendee.save()
+
+    find_or_create(
+        AttendeeEnrollment,
+        {
+            "attendee": attendee,
+            "faction_enrollment": faction_enrollment,
+            "quarters": quarters,
+        },
+        {
+            "start": faction_enrollment.start,
+            "end": faction_enrollment.end,
+            "role": "Participant",
         },
     )
     print("Browser QA seed data ready.")

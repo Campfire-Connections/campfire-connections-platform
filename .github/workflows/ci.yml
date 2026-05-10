@@ -5,7 +5,40 @@ on:
   pull_request:
 
 jobs:
-  django:
+  template-audits:
+    runs-on: ubuntu-latest
+    env:
+      DJANGO_SETTINGS_MODULE: campfire_connections.settings.local
+      DJANGO_SECRET_KEY: ci-secret-key
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+      DJANGO_DATABASE_ENGINE: sqlite
+      PYTHON: python
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          ./install_local.sh
+
+      - name: Django system check
+        run: python manage.py check
+
+      - name: Audit template shells
+        run: ./scripts/audit-templates.py
+
+      - name: Audit template references
+        run: python scripts/audit-template-references.py
+
+  django-tests:
     runs-on: ubuntu-latest
     env:
       DJANGO_SETTINGS_MODULE: campfire_connections.settings.local
@@ -34,8 +67,47 @@ jobs:
       - name: Check migrations
         run: python manage.py makemigrations --check --dry-run
 
-      - name: Run tests
+      - name: Run Django tests
         run: python manage.py test
 
-      - name: Audit template shells
-        run: ./scripts/audit-templates.py
+  browser-qa:
+    runs-on: ubuntu-latest
+    env:
+      DJANGO_SETTINGS_MODULE: campfire_connections.settings.local
+      DJANGO_SECRET_KEY: ci-secret-key
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+      DJANGO_DATABASE_ENGINE: sqlite
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          ./install_local.sh
+
+      - name: Install browser dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Prepare browser QA database
+        run: |
+          python manage.py migrate --noinput
+          python scripts/seed-browser-qa.py
+
+      - name: Run Playwright frontend QA
+        run: npm run qa:browser

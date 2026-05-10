@@ -1,10 +1,64 @@
 from django.contrib.auth.models import AnonymousUser
 from django.db import DatabaseError
 from django.test import RequestFactory, TestCase
-from django.urls import reverse
+from django.urls import NoReverseMatch, URLPattern, URLResolver, get_resolver, reverse
 from unittest.mock import patch
 
 from . import views
+
+
+def _iter_named_patterns(patterns=None, namespaces=None, parent_kwargs=None):
+    patterns = patterns or get_resolver().url_patterns
+    namespaces = namespaces or []
+    parent_kwargs = parent_kwargs or {}
+    for pattern in patterns:
+        if isinstance(pattern, URLResolver):
+            next_namespaces = namespaces
+            if pattern.namespace:
+                next_namespaces = [*namespaces, pattern.namespace]
+            next_kwargs = {**parent_kwargs, **_generated_kwargs(pattern)}
+            yield from _iter_named_patterns(
+                pattern.url_patterns,
+                next_namespaces,
+                next_kwargs,
+            )
+        elif isinstance(pattern, URLPattern) and pattern.name:
+            name = ":".join([*namespaces, pattern.name])
+            yield name, pattern, parent_kwargs
+
+
+def _sample_value(converter):
+    if converter.__class__.__name__ == "IntConverter":
+        return 1
+    if converter.__class__.__name__ == "UUIDConverter":
+        return "00000000-0000-0000-0000-000000000001"
+    if converter.__class__.__name__ == "PathConverter":
+        return "sample/path"
+    return "sample-slug"
+
+
+def _sample_value_for_kwarg(name):
+    if name.endswith("_pk") or name.endswith("_id") or name == "pk":
+        return 1
+    if name == "format":
+        return "json"
+    return "sample-slug"
+
+
+def _generated_kwargs(pattern):
+    if pattern.pattern.converters:
+        return {
+            key: _sample_value(converter)
+            for key, converter in pattern.pattern.converters.items()
+        }
+    regex = getattr(pattern.pattern, "regex", None)
+    if not regex:
+        return {}
+    return {
+        key: _sample_value_for_kwarg(key)
+        for key in regex.groupindex
+        if key != "format"
+    }
 
 
 class MainViewTests(TestCase):
@@ -35,3 +89,31 @@ class MainViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Quick access")
         self.assertContains(response, "Camp coordination, ready for today.")
+
+
+class NamedRouteIntegrityTests(TestCase):
+    skipped_namespaces = {"admin", "api-auth"}
+    skipped_route_names = {"api-root"}
+
+    def test_named_routes_reverse_with_generated_kwargs(self):
+        failures = []
+        checked = 0
+
+        for route_name, pattern, parent_kwargs in _iter_named_patterns():
+            namespace = route_name.split(":", 1)[0]
+            if namespace in self.skipped_namespaces or route_name in self.skipped_route_names:
+                continue
+
+            kwargs = {**parent_kwargs, **_generated_kwargs(pattern)}
+
+            try:
+                reverse(route_name, kwargs=kwargs or None)
+            except NoReverseMatch:
+                continue
+            except Exception as exc:
+                failures.append(f"{route_name} kwargs={kwargs}: {exc}")
+            else:
+                checked += 1
+
+        self.assertGreater(checked, 25)
+        self.assertEqual(failures, [])

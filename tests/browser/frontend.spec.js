@@ -82,6 +82,18 @@ test("manual report table filtering works", async ({ page }) => {
   await expect(page.locator("[data-filter-empty]")).toBeVisible();
 });
 
+test("attendee enrollment list renders seeded enrollment", async ({ page }) => {
+  await login(page);
+  await page.goto("/attendees/qa-riley-chen/enrollments/");
+
+  await expect(page.getByRole("heading", { name: "Attendee Enrollments" })).toBeVisible();
+  await expect(page.locator(".table-shell table")).toBeVisible();
+  await expect(page.getByText("QA Eagle Patrol")).toBeVisible();
+  await expect(page.getByText("QA Riley Chen")).toBeVisible();
+  await expect(page.getByText("QA Cabin 1")).toBeVisible();
+  await expectNoDocumentOverflow(page);
+});
+
 test("theme toggle remains navigable", async ({ page }) => {
   await login(page);
   await page.goto("/dashboard/");

@@ -3,6 +3,7 @@ const { defineConfig, devices } = require("@playwright/test");
 const host = "127.0.0.1";
 const port = process.env.PLAYWRIGHT_PORT || "8000";
 const baseURL = `http://${host}:${port}`;
+const python = process.env.PYTHON || ".venv/bin/python";
 
 module.exports = defineConfig({
   testDir: "./tests/browser",
@@ -12,9 +13,9 @@ module.exports = defineConfig({
   workers: 1,
   reporter: [["list"], ["html", { open: "never" }]],
   webServer: {
-    command: `.venv/bin/python manage.py migrate --noinput && .venv/bin/python scripts/seed-browser-qa.py && .venv/bin/python manage.py runserver ${host}:${port}`,
+    command: `${python} manage.py migrate --noinput && ${python} scripts/seed-browser-qa.py && ${python} manage.py runserver ${host}:${port} --noreload`,
     url: baseURL,
-    reuseExistingServer: true,
+    reuseExistingServer: false,
     timeout: 120000,
   },
   use: {
