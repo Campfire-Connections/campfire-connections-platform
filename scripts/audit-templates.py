@@ -27,6 +27,22 @@ ALLOWED_EXTENDS = (
     "admin/base.html",
     "admin/change_form.html",
 )
+FORBIDDEN_PATTERNS = {
+    "bodyHeader": "legacy bodyHeader layout is not allowed",
+    "onclick=": "inline event handlers are not allowed",
+    "data-toggle=": "Bootstrap 4 data-toggle is not allowed",
+    "style=": "inline styles are not allowed",
+    'href="#"': "placeholder links are not allowed",
+    "href='#'": "placeholder links are not allowed",
+}
+ALLOWED_PATTERN_PATHS = {
+    "$(": {
+        "pages/templates/partials/datatable.html",
+    },
+    ".DataTable(": {
+        "pages/templates/partials/datatable.html",
+    },
+}
 
 
 def should_skip(path):
@@ -36,8 +52,12 @@ def should_skip(path):
         or rel.startswith(ALLOWED_PREFIXES)
         or rel.startswith("venv/")
         or rel.startswith(".venv/")
+        or rel.startswith("node_modules/")
+        or rel.startswith("playwright-report/")
+        or rel.startswith("test-results/")
         or "/venv/" in rel
         or "/.venv/" in rel
+        or "/node_modules/" in rel
     )
 
 
@@ -67,6 +87,14 @@ def main():
             continue
         if parent not in ALLOWED_EXTENDS:
             failures.append(f"{rel}: extends unsupported shell {parent!r}")
+        if parent == "base/show.html" and "{% block cards" in contents:
+            failures.append(f"{rel}: base/show.html pages must use card_body blocks")
+        for pattern, message in FORBIDDEN_PATTERNS.items():
+            if pattern in contents:
+                failures.append(f"{rel}: {message}")
+        for pattern, allowed_paths in ALLOWED_PATTERN_PATHS.items():
+            if pattern in contents and rel not in allowed_paths:
+                failures.append(f"{rel}: disallowed template script pattern {pattern!r}")
 
     if failures:
         print("Template shell audit failed:")
