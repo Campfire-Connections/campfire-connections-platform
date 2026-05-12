@@ -20,6 +20,10 @@ from django.urls import include, path
 from django.contrib.auth import views as auth_views
 from user.views import DashboardView as UserDashboardView
 
+handler403 = "pages.views.error_403"
+handler404 = "pages.views.error_404"
+handler500 = "pages.views.error_500"
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path(
