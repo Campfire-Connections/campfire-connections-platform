@@ -22,6 +22,7 @@ from enrollment.models.organization import OrganizationEnrollment
 from enrollment.models.temporal import Period, Week
 from facility.models.facility import Facility
 from facility.models.quarters import Quarters, QuartersType
+from facility.models.faculty import FacultyProfile
 from faction.models.faction import Faction
 from faction.models.attendee import AttendeeProfile
 from organization.models import Organization
@@ -81,6 +82,56 @@ def get_or_create_attendee_user():
     return user
 
 
+def get_or_create_role_user(username, email, first_name, last_name, user_type):
+    User = get_user_model()
+    user, created = User.objects.get_or_create(
+        username=username,
+        defaults={
+            "email": email,
+            "first_name": first_name,
+            "last_name": last_name,
+            "user_type": user_type,
+        },
+    )
+    changed = False
+    for attr, value in {
+        "email": email,
+        "first_name": first_name,
+        "last_name": last_name,
+        "user_type": user_type,
+    }.items():
+        if getattr(user, attr) != value:
+            setattr(user, attr, value)
+            changed = True
+    if created or changed or not user.check_password("pass12345"):
+        user.set_password("pass12345")
+        user.save()
+    return user
+
+
+def ensure_faculty_profile(user, organization, facility, role):
+    profile = FacultyProfile.objects.filter(user=user).first()
+    if not profile:
+        return FacultyProfile.objects.create(
+            user=user,
+            organization=organization,
+            facility=facility,
+            role=role,
+        )
+    changed = False
+    for attr, value in {
+        "organization": organization,
+        "facility": facility,
+        "role": role,
+    }.items():
+        if getattr(profile, attr) != value:
+            setattr(profile, attr, value)
+            changed = True
+    if changed:
+        profile.save()
+    return profile
+
+
 def find_or_create(model, lookup, create_values=None):
     instance = model.objects.filter(**lookup).first()
     if instance:
@@ -112,6 +163,33 @@ def main():
     ).first()
     if not facility:
         facility = Facility.objects.create(name="QA Camp", organization=organization)
+
+    faculty_staff = get_or_create_role_user(
+        "qa.faculty.staff",
+        "qa.faculty.staff@example.com",
+        "QA",
+        "Faculty Staff",
+        get_user_model().UserType.FACULTY,
+    )
+    ensure_faculty_profile(
+        faculty_staff,
+        organization,
+        facility,
+        FacultyProfile.FacultyRole.STAFF,
+    )
+    faculty_department_admin = get_or_create_role_user(
+        "qa.faculty.department",
+        "qa.faculty.department@example.com",
+        "QA",
+        "Department Admin",
+        get_user_model().UserType.FACULTY,
+    )
+    ensure_faculty_profile(
+        faculty_department_admin,
+        organization,
+        facility,
+        FacultyProfile.FacultyRole.DEPARTMENT_ADMIN,
+    )
 
     faction = Faction.objects.filter(
         name="QA Eagle Patrol",

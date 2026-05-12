@@ -5,10 +5,10 @@ const credentials = {
   password: "pass12345",
 };
 
-async function login(page) {
+async function login(page, account = credentials) {
   await page.goto("/login/");
-  await page.fill('input[name="username"]', credentials.username);
-  await page.fill('input[name="password"]', credentials.password);
+  await page.fill('input[name="username"]', account.username);
+  await page.fill('input[name="password"]', account.password);
   await page.click('.app-form button[type="submit"], .app-form input[type="submit"]');
   await expect(page.locator(".app-rail")).toBeVisible();
 }
@@ -26,6 +26,16 @@ async function expectNoRailOverflow(page) {
     return rail ? rail.scrollWidth > rail.clientWidth : false;
   });
   expect(overflow).toBeFalsy();
+}
+
+async function closeMobileRailIfOpen(page) {
+  const toggle = page.locator("#mobileRailToggle");
+  if ((await toggle.count()) && (await toggle.isVisible())) {
+    const railExpanded = await page.locator('.app-rail[data-collapsed="true"]').count();
+    if (railExpanded) {
+      await toggle.click();
+    }
+  }
 }
 
 test("public home renders without document overflow", async ({ page }) => {
@@ -91,6 +101,27 @@ test("attendee enrollment list renders seeded enrollment", async ({ page }) => {
   await expect(page.getByText("QA Eagle Patrol")).toBeVisible();
   await expect(page.getByText("QA Riley Chen")).toBeVisible();
   await expect(page.getByText("QA Cabin 1")).toBeVisible();
+  await expectNoDocumentOverflow(page);
+});
+
+test("faculty staff sees branded access denied page", async ({ page }) => {
+  await login(page, { username: "qa.faculty.staff", password: "pass12345" });
+  await page.goto("/facilities/qa-camp/faculty/manage/");
+
+  await expect(page.getByRole("heading", { name: "Access Denied", level: 1 })).toBeVisible();
+  await expect(page.getByText("does not have permission")).toBeVisible();
+  await expect(page.getByRole("banner").getByRole("link", { name: "Dashboard" })).toBeVisible();
+  await closeMobileRailIfOpen(page);
+  await expectNoDocumentOverflow(page);
+});
+
+test("faculty department admin can open faculty management", async ({ page }) => {
+  await login(page, { username: "qa.faculty.department", password: "pass12345" });
+  await page.goto("/facilities/qa-camp/faculty/manage/");
+
+  await expect(page.getByRole("heading", { name: "Manage Faculty" })).toBeVisible();
+  await expect(page.locator(".manage-section")).toBeVisible();
+  await closeMobileRailIfOpen(page);
   await expectNoDocumentOverflow(page);
 });
 
