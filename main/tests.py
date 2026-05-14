@@ -2,6 +2,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.db import DatabaseError
 from django.test import RequestFactory, TestCase
 from django.urls import NoReverseMatch, URLPattern, URLResolver, get_resolver, reverse
+from itertools import combinations
 from unittest.mock import patch
 
 from . import views
@@ -61,6 +62,38 @@ def _generated_kwargs(pattern):
     }
 
 
+def _route_kwargs_candidates(parent_kwargs, pattern_kwargs):
+    combined = {**parent_kwargs, **pattern_kwargs}
+    candidates = [combined]
+
+    outer_scope_keys = (
+        "facility_slug",
+        "faction_slug",
+        "organization_slug",
+        "facility_enrollment_slug",
+    )
+    removable_keys = [
+        key for key in outer_scope_keys if key in combined and key not in pattern_kwargs
+    ]
+    for count in range(1, len(removable_keys) + 1):
+        for keys_to_remove in combinations(removable_keys, count):
+            scoped_variant = {
+                key: value
+                for key, value in combined.items()
+                if key not in keys_to_remove
+            }
+            if scoped_variant not in candidates:
+                candidates.append(scoped_variant)
+
+    if pattern_kwargs and pattern_kwargs not in candidates:
+        candidates.append(pattern_kwargs)
+
+    if parent_kwargs and parent_kwargs not in candidates:
+        candidates.append(parent_kwargs)
+
+    return candidates
+
+
 class MainViewTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
@@ -104,16 +137,21 @@ class NamedRouteIntegrityTests(TestCase):
             if namespace in self.skipped_namespaces or route_name in self.skipped_route_names:
                 continue
 
-            kwargs = {**parent_kwargs, **_generated_kwargs(pattern)}
-
-            try:
-                reverse(route_name, kwargs=kwargs or None)
-            except NoReverseMatch:
-                continue
-            except Exception as exc:
-                failures.append(f"{route_name} kwargs={kwargs}: {exc}")
-            else:
+            pattern_kwargs = _generated_kwargs(pattern)
+            errors = []
+            for kwargs in _route_kwargs_candidates(parent_kwargs, pattern_kwargs):
+                try:
+                    reverse(route_name, kwargs=kwargs or None)
+                except NoReverseMatch as exc:
+                    errors.append(f"{kwargs}: {exc}")
+                    continue
+                except Exception as exc:
+                    failures.append(f"{route_name} kwargs={kwargs}: {exc}")
+                    break
                 checked += 1
+                break
+            else:
+                failures.append(f"{route_name}: {' | '.join(errors)}")
 
         self.assertGreater(checked, 25)
         self.assertEqual(failures, [])
