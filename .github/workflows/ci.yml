@@ -4,6 +4,10 @@ on:
   push:
   pull_request:
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   template-audits:
     runs-on: ubuntu-latest
@@ -77,6 +81,8 @@ jobs:
       DJANGO_SECRET_KEY: ci-secret-key
       DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
       DJANGO_DATABASE_ENGINE: sqlite
+      PLAYWRIGHT_PORT: "8010"
+      PYTHON: python
 
     steps:
       - name: Check out repository
@@ -111,3 +117,21 @@ jobs:
 
       - name: Run Playwright frontend QA
         run: npm run qa:browser
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload Playwright test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7
