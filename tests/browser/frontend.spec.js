@@ -38,6 +38,13 @@ async function closeMobileRailIfOpen(page) {
   }
 }
 
+async function attachPageScreenshot(testInfo, page, name) {
+  await testInfo.attach(name, {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
+  });
+}
+
 test("public home renders without document overflow", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("body")).toBeVisible();
@@ -61,7 +68,7 @@ test("authenticated dashboard sidebar filters without rail overflow", async ({ p
   await expectNoRailOverflow(page);
 });
 
-test("detail page tabs switch content", async ({ page }) => {
+test("detail page tabs switch content", async ({ page }, testInfo) => {
   await login(page);
   await page.goto("/factions/qa-eagle-patrol");
 
@@ -74,6 +81,7 @@ test("detail page tabs switch content", async ({ page }) => {
   await tabs.nth(1).click();
   await expect(tabs.nth(1)).toHaveClass(/active/);
   await expect(page.locator(".tab-pane.active")).toBeVisible();
+  await attachPageScreenshot(testInfo, page, "detail-shell");
 });
 
 test("manual report table filtering works", async ({ page }) => {
@@ -92,7 +100,7 @@ test("manual report table filtering works", async ({ page }) => {
   await expect(page.locator("[data-filter-empty]")).toBeVisible();
 });
 
-test("attendee enrollment list renders seeded enrollment", async ({ page }) => {
+test("attendee enrollment list renders seeded enrollment", async ({ page }, testInfo) => {
   await login(page);
   await page.goto("/attendees/qa-riley-chen/enrollments/");
 
@@ -102,6 +110,7 @@ test("attendee enrollment list renders seeded enrollment", async ({ page }) => {
   await expect(page.getByText("QA Riley Chen")).toBeVisible();
   await expect(page.getByText("QA Cabin 1")).toBeVisible();
   await expectNoDocumentOverflow(page);
+  await attachPageScreenshot(testInfo, page, "list-shell");
 });
 
 test("faculty staff sees branded access denied page", async ({ page }) => {
@@ -115,7 +124,7 @@ test("faculty staff sees branded access denied page", async ({ page }) => {
   await expectNoDocumentOverflow(page);
 });
 
-test("faculty department admin can open faculty management", async ({ page }) => {
+test("faculty department admin can open faculty management", async ({ page }, testInfo) => {
   await login(page, { username: "qa.faculty.department", password: "pass12345" });
   await page.goto("/facilities/qa-camp/faculty/manage/");
 
@@ -123,6 +132,7 @@ test("faculty department admin can open faculty management", async ({ page }) =>
   await expect(page.locator(".manage-section")).toBeVisible();
   await closeMobileRailIfOpen(page);
   await expectNoDocumentOverflow(page);
+  await attachPageScreenshot(testInfo, page, "manage-shell");
 });
 
 test("theme toggle remains navigable", async ({ page }) => {
